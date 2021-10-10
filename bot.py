@@ -1,9 +1,11 @@
 import praw
 from config import *
 from time import sleep
-import os
 from better_profanity import profanity
 from badwords import badwords
+from datetime import datetime
+
+
 # import logging
 
 # handler = logging.StreamHandler()
@@ -18,17 +20,27 @@ reddit = praw.Reddit(username = username,
 			password = password,
 			client_id = client_id,
 			client_secret = client_secret,
-			user_agent = "CummyBot1984 by /u/jartwobs")
+			user_agent = user_agent)
 print("Logged in!")
+
+def logging(op):
+    f = open('log.txt', "a")
+	time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+    f.write(f"{time} --- Replied to {op.name}.")
+    f.close()
 
 
 def comment(op): #Filter Spam
 	if op.comment_karma + op.link_karma < 10:
-		print("OP's karma is too low. Bypassing submission.")
+		print(f"{op.name}'s karma is too low. Bypassing submission.")
+		f = open('log.txt', "a")
+		time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+		f.write(f"{time} --- Bypassed {op.name}, karma too low.")
+		f.close()
 		return False
 	return True
 
-def reply(title, body):
+def reply(title, body): #Censor slurs
 	replytext = (title +'\n\n' + body)
 	profanity.load_censor_words(badwords)
 	return profanity.censor(replytext)
@@ -43,10 +55,8 @@ def streaming():
 		if comment(op):
 			submission.reply(reply(title,body))
 			print(f'Replied to {op.name}')
-
+			logging(op)
 			sleep(10)
-
-		sleep(10)
 
 if __name__ == "__main__":
 	streaming()

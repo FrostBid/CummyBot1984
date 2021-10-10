@@ -114,3 +114,4 @@ dmypy.json
 .pyre/
 /config.py
 /badwords.py
+/log.txt
