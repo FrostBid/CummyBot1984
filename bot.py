@@ -34,7 +34,7 @@ def reply(title, body):
 	return profanity.censor(replytext)
 
 def streaming():
-	subreddit = reddit.subreddit("jartwobs")
+	subreddit = reddit.subreddit("copypasta")
 	for submission in subreddit.stream.submissions(skip_existing=True):
 		title = submission.title
 		body = submission.selftext
