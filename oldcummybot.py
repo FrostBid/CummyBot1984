@@ -1,3 +1,7 @@
+# https://www.reddit.com/r/copypasta/comments/j3uc7q/cummys_source_code/
+# Original Author: u/SynthGood
+# OP rewrote Reddit's API... Porting it to Praw for the new bot.
+
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
