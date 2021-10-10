@@ -12,3 +12,6 @@ def bot_login():
 				user_agent = "CummyBot1984 by /u/jartwobs")
 	print "Logged in!"
 	return r
+
+
+def copypaste:
