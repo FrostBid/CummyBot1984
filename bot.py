@@ -24,10 +24,10 @@ reddit = praw.Reddit(username = username,
 print("Logged in!")
 
 def logging(op):
-    f = open('log.txt', "a")
+	f = open('log.txt', "a")
 	time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-    f.write(f"{time} --- Replied to {op.name}.")
-    f.close()
+	f.write(f"{time} --- Replied to {op.name}.\n")
+	f.close()
 
 
 def comment(op): #Filter Spam
@@ -35,7 +35,7 @@ def comment(op): #Filter Spam
 		print(f"{op.name}'s karma is too low. Bypassing submission.")
 		f = open('log.txt', "a")
 		time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-		f.write(f"{time} --- Bypassed {op.name}, karma too low.")
+		f.write(f"{time} --- Bypassed {op.name}, karma too low.\n")
 		f.close()
 		return False
 	return True
