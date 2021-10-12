@@ -5,7 +5,6 @@ from better_profanity import profanity
 from badwords import badwords
 from datetime import datetime
 
-
 # import logging
 
 # handler = logging.StreamHandler()
@@ -23,26 +22,33 @@ reddit = praw.Reddit(username = username,
 			user_agent = user_agent)
 print("Logged in!")
 
-def logging(op):
+def logging(op): #log timestamp
 	f = open('log.txt', "a")
 	time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
 	f.write(f"{time} --- Replied to {op.name}.\n")
 	f.close()
 
 
-def comment(op): #Filter Spam
-	if op.comment_karma + op.link_karma < 10:
+def comment(op,body):
+	if op.comment_karma + op.link_karma < 10: #Filter Spam
 		print(f"{op.name}'s karma is too low. Bypassing submission.")
 		f = open('log.txt', "a")
 		time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
 		f.write(f"{time} --- Bypassed {op.name}, karma too low.\n")
 		f.close()
 		return False
+	elif len(body) > 9999: #Trims the post if it exceeds 10000 characters.
+		body = body[:9900]
 	return True
 
-def reply(title, body): #Censor slurs
-	replytext = (title +'\n\n' + body)
-	profanity.load_censor_words(badwords)
+def reply(title, body):
+	if len(body) <= 1: #Use title as comment if the post does not have body.
+		replytext = title
+	else:
+		replytext = body
+	profanity.load_censor_words(badwords) #Censor slurs
+	for i in badwords:
+		replytext = replytext.replace(i, '*' * len(i))
 	return profanity.censor(replytext)
 
 def streaming():
@@ -52,11 +58,15 @@ def streaming():
 		body = submission.selftext
 		op = submission.author
 
-		if comment(op):
-			submission.reply(reply(title,body))
-			print(f'Replied to {op.name}')
-			logging(op)
-			sleep(10)
+		try:
+			if comment(op,body):
+				submission.reply(reply(title,body))
+				print(f'Replied to {op.name}')
+				logging(op)
+				sleep(10)
+
+		except:
+			print('Failed to reply. Error has occurred. Please check.')
 
 if __name__ == "__main__":
 	streaming()

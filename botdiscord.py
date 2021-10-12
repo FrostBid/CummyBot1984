@@ -1,5 +1,3 @@
-from config import *
-from badwords import badwords
 import praw
 import asyncpraw
 from time import sleep
@@ -7,6 +5,8 @@ from better_profanity import profanity
 from datetime import datetime
 import discord
 import os
+from badwords import badwords
+from config import *
 
 # import nest_asyncio
 # nest_asyncio.apply()
@@ -43,8 +43,8 @@ def comment(op, body):  # Filter Spam
         print(f"{op.name}'s karma is too low. Bypassing submission.")
         error = 'toolong'
         return False
-    elif len(body) > 9900:
-        body = body[:9900]
+    elif len(body) > 9999:
+        body = body[:9990]
     return True
 
 
@@ -54,6 +54,8 @@ def reply(title, body):
     else:
         replytext = body
     profanity.load_censor_words(badwords)  # Censor slurs
+    for i in badwords:
+        replytext = replytext.replace(i, '*' * len(i))
     return profanity.censor(replytext)
 
 
@@ -78,7 +80,7 @@ async def on_message(message):
                 await channel.send(f"{time} --- Bypassed {op.name}, karma too low.")
         except:
             time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-            await channel.send(f"{time} --- Error has occurred!! @FrostBid#4135")
+            await channel.send(f"{time} --- Failed to reply. Error has occurred!!")
 
 
 if __name__ == "__main__":
