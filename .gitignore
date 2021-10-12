@@ -116,3 +116,4 @@ dmypy.json
 /badwords.py
 /log.txt
 /botserverver.py
+!/badwords.py
