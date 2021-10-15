@@ -7,7 +7,9 @@ import discord
 import os
 from badwords import badwords
 from config import *
+from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 
+nltk.download('vader_lexicon')
 # import nest_asyncio
 # nest_asyncio.apply()
 
@@ -38,21 +40,19 @@ async def on_ready():
     print('Logged in Discord as {0.user}'.format(client))
 
 
-def comment(op, body):  # Filter Spam
+def comment(op, replytext):  # Filter Spam
     if op.comment_karma + op.link_karma < 10:
         print(f"{op.name}'s karma is too low. Bypassing submission.")
-        error = 'toolong'
         return False
-    elif len(body) > 9999:
-        body = body[:9990]
+    elif SIA().polarity_scores(replytext)['compound'] <= -0.5:  # Added a sentinment analysis to score post.
+        print(
+            f"{op.name}'s SIA score is {SIA().polarity_scores(replytext)['compound']}, below the limit of 0.5. Bypassing submission.")
+        return False
     return True
 
 
-def reply(title, body):
-    if len(body) <= 1:
-        replytext = title
-    else:
-        replytext = body
+def reply(replytext):
+    print(f"SIA score:{SIA().polarity_scores(replytext)['compound']}")
     profanity.load_censor_words(badwords)  # Censor slurs
     for i in badwords:
         replytext = replytext.replace(i, '*' * len(i))
@@ -67,9 +67,15 @@ async def on_message(message):
         title = submission.title
         body = submission.selftext
         op = submission.author
+        if len(body) <= 1:  # Use title as comment if the post does not have body.
+            replytext = title
+        elif len(body) > 9900:
+            replytext = body[:9899]  # Implements a maximum length of text
+        else:
+            replytext = body
         try:
-            if comment(op, body):
-                submission.reply(reply(title, body))
+            if comment(op, replytext):
+                submission.reply(reply(replytext))
                 print(f'Replied to {op.name}')
                 time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
                 await channel.send(f"{time} --- Replied to {op.name}.")

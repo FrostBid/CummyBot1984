@@ -4,7 +4,11 @@ from time import sleep
 from better_profanity import profanity
 from badwords import badwords
 from datetime import datetime
+from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
+import nltk
+import pandas as pd
 
+nltk.download('vader_lexicon')
 # import logging
 
 # handler = logging.StreamHandler()
@@ -22,30 +26,31 @@ reddit = praw.Reddit(username = username,
 			user_agent = user_agent)
 print("Logged in!")
 
-def logging(op): #log timestamp
+def logging(op,replytext): #log timestamp
 	f = open('log.txt', "a")
 	time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-	f.write(f"{time} --- Replied to {op.name}.\n")
+	f.write(f"{time} --- Replied to {op.name}, SIA score is {SIA().polarity_scores(replytext)['compound']}.\n")
 	f.close()
 
 
-def comment(op,body):
+def comment(op,replytext):
+	f = open('log.txt', "a")
+	time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
 	if op.comment_karma + op.link_karma < 10: #Filter Spam
 		print(f"{op.name}'s karma is too low. Bypassing submission.")
-		f = open('log.txt', "a")
-		time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
 		f.write(f"{time} --- Bypassed {op.name}, karma too low.\n")
 		f.close()
 		return False
-	elif len(body) > 9999: #Trims the post if it exceeds 10000 characters.
-		body = body[:9900]
+	elif SIA().polarity_scores(replytext)['compound'] <= -0.5: # Added a sentinment analysis to score post.
+		print(f"{op.name}'s SIA score is {SIA().polarity_scores(replytext)['compound']}, below the limit of 0.5. Bypassing submission.")
+		f.write(f"{time} --- Bypassed {op.name}, SIA score is {SIA().polarity_scores(replytext)['compound']}, below the limit of 0.5.\n")
+		f.close()
+		return False
+	f.close()
 	return True
 
-def reply(title, body):
-	if len(body) <= 1: #Use title as comment if the post does not have body.
-		replytext = title
-	else:
-		replytext = body
+def reply(title, replytext):
+	print(f"SIA score:{SIA().polarity_scores(replytext)['compound']}")
 	profanity.load_censor_words(badwords) #Censor slurs
 	for i in badwords:
 		replytext = replytext.replace(i, '*' * len(i))
@@ -57,12 +62,15 @@ def streaming():
 		title = submission.title
 		body = submission.selftext
 		op = submission.author
-
+	if len(body) <= 1:  # Use title as comment if the post does not have body.
+		replytext = title
+	elif len(body) > 9900
+		replytext = body[:9899]  # Implements a maximum length of text
 		try:
-			if comment(op,body):
-				submission.reply(reply(title,body))
+			if comment(op,replytext):
+				submission.reply(reply(replytext))
 				print(f'Replied to {op.name}')
-				logging(op)
+				logging(op,replytext)
 				sleep(10)
 
 		except:
